@@ -1,0 +1,8 @@
+output-file-of-results
+postings-file
+dictionary-file
+patsnap-corpus
+fake-corpus
+cs3245-hw4
+*.pyc
+meta_data.txt
