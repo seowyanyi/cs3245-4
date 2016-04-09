@@ -8,10 +8,10 @@ import indexer
 from os import listdir
 from os.path import isfile, join
 from nltk.tokenize import word_tokenize
-from nltk.stem.porter import PorterStemmer
 from inverted_index import InvertedIndex 
 import xml.etree.ElementTree as ET
-
+import helper
+        
 try:
    import cPickle as pickle
 except:
@@ -23,7 +23,7 @@ def build(index_directory, dictionary_file, postings_file):
     files_to_index = [f for f in listdir(index_directory) if isfile(join(index_directory, f))]
     index = []
     doc_lengths = {}
-    # counter = 0
+    counter = 0
     for file_name in files_to_index:
         file_path = format_directory_path(index_directory) + file_name
         # Read XML
@@ -38,6 +38,7 @@ def build(index_directory, dictionary_file, postings_file):
                 t = build_tokens(child.text)
                 tokens.extend(t)
         
+        tokens = helper.remove_stop_words(helper.filter_invalid_characters(tokens))
         # build tokens
         doc_lengths[remove_file_ext(file_name)] = get_doc_length(tokens)
         index_entries = add_doc_id_to_tokens(tokens, remove_file_ext(file_name))
@@ -67,11 +68,7 @@ def get_doc_length(tokens):
 
 def build_tokens(text):
     tokens = word_tokenize(text)
-    return normalize_tokens(tokens)
-
-def normalize_tokens(tokens):
-    tokens = stemmer(tokens)
-    return case_folder(tokens)
+    return helper.normalize_tokens(tokens)
 
 def format_directory_path(directory_path):
     if directory_path[len(directory_path)-1] != '/':
@@ -199,15 +196,3 @@ def is_valid_token(token):
     m = re.search('[a-zA-Z0-9_]+', token)
     return m is not None
 
-def stemmer(tokens):
-    """
-    Applies stemming to a given array of tokens
-    """
-    porter_stemmer = PorterStemmer()
-    return [porter_stemmer.stem(token) for token in tokens]
-
-def case_folder(tokens):
-    """
-    Converts all tokens to lower case
-    """
-    return [token.lower() for token in tokens]

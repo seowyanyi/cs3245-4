@@ -1,0 +1,63 @@
+Basic tf-idf
+>>> Query 1
+Num results: 2242
+Precision: 0.479166666667
+Recall: 1.0
+F2: 0.489361702128
+
+>>> Query 2
+Num results: 2241
+Precision: 0.5
+Recall: 1.0
+F2: 0.5
+
+Removal of stopwords
+>>> Query 1
+Num results: 2241
+Precision: 0.479166666667
+Recall: 1.0
+F2: 0.489361702128
+
+>>> Query 2
+Num results: 2238
+Precision: 0.5
+Recall: 1.0
+F2: 0.5
+
+
+Removal of punctuation etc.
+>>> Query 1
+Num results: 1401
+Precision: 0.478260869565
+Recall: 0.95652173913
+F2: 0.478260869565
+
+>>> Query 2
+Num results: 2002
+Precision: 0.5
+Recall: 1.0
+F2: 0.5
+
+
+A
+>>> Query 1
+
+>>> Query 2
+
+A
+>>> Query 1
+
+>>> Query 2
+
+
+A
+>>> Query 1
+
+>>> Query 2
+
+
+A
+>>> Query 1
+
+>>> Query 2
+

@@ -48,7 +48,7 @@ def evaluate(result_file, positive, negative):
     if p == 0 and R == 0:
         print 'F2 is 0'
     else:        
-        print 'F2: {}'.format(5*P*R/(4*P + R))
+        print 'F2: {}'.format(2*P*R/(2*P + R))
 
 def usage():
     print "Oops"

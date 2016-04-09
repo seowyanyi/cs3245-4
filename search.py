@@ -4,8 +4,9 @@ import getopt
 import os
 import math
 from inverted_index import InvertedIndex 
-from indexer import normalize_tokens
 from nltk.tokenize import word_tokenize
+import helper
+
 try:
    import cPickle as pickle
 except:
@@ -36,13 +37,14 @@ def search(dictionary_file, postings_file, query_file, output_file):
             t = build_tokens(child.text)
             tokens.extend(t)
 
+    tokens = helper.remove_stop_words(helper.filter_invalid_characters(tokens))
     results = execute_query(tokens, inverted_index, meta_data)
     write_to_output(output_file, results)
 
 
 def build_tokens(text):
     tokens = word_tokenize(text)
-    return normalize_tokens(tokens)
+    return helper.normalize_tokens(tokens)
 
 
 def get_meta_data():
