@@ -18,7 +18,9 @@ pp = pprint.PrettyPrinter(indent=4)
 
 HIGH_PRIORITY_FREQ_THRESHOLD = 4
 META_DATA = 'meta_data.txt'
-TOP_X_PERCENT_RESULTS = 0.9
+TOP_X_PERCENT_RESULTS = 0.95
+top_UPC_classes = []
+top_IPC_classes = []
 
 def search(dictionary_file, postings_file, query_file, output_file):
     try:
@@ -50,25 +52,45 @@ def search(dictionary_file, postings_file, query_file, output_file):
 
     title_tokens = helper.remove_stop_words(helper.filter_invalid_characters(title_tokens))
     description_tokens = helper.remove_stop_words(helper.filter_invalid_characters(description_tokens))
+
+    # tight results are results which favour high precision. We use this as a proxy for true positive
+    tight_results = execute_query(title_tokens, description_tokens, [], inverted_index, meta_data)
+    global top_UPC_classes
+    global top_IPC_classes
+    top_UPC_classes = get_top_classes(tight_results, meta_data['UPC_class'], 6)
+    top_IPC_classes = get_top_classes(tight_results, meta_data['IPC_class'], 5)
+
+    # supplementary_results = expand_query(tight_results, meta_data['doc_top_terms'], inverted_index, meta_data)
+
     additional_tokens = helper.normalize_tokens(list(set(additional_tokens)))
 
     results = execute_query(title_tokens, description_tokens, additional_tokens, inverted_index, meta_data)
 
-    supplementary_results = expand_query(results, meta_data['doc_top_terms'], inverted_index, meta_data)
     k = int(TOP_X_PERCENT_RESULTS * len(results))
-    j = int(TOP_X_PERCENT_RESULTS * len(supplementary_results))
-    results = list(set(results[:k] + supplementary_results[:j]))
-    write_to_output(output_file, results)
+    # j = int(TOP_X_PERCENT_RESULTS * len(supplementary_results))
+    # results = list(set(results[:k] + supplementary_results[:j]))
+    write_to_output(output_file, results[:k])
+
+def get_top_classes(results, classes, x):
+    k = int(0.1 * len(results))
+    top_few = results[:k]
+    PC = []
+    for result in top_few:
+        try:
+            PC.append(classes[result])
+        except KeyError:
+            pass
+    return helper.get_top_k(PC, x)
 
 
 def expand_query(results, doc_top_terms, inverted_index, meta_data):
     """
     To deal with the anomalous state of knowledge problem
-    We take top 20% of documents. For each document, pick the 10 most frequent words (already indexed)
+    We take top 10% of documents. For each document, pick the 10 most frequent words (already indexed)
     From this pool of words, pick the final top 10 by frequency.
     Run query again and return results
     """
-    k = int(0.2 * len(results))
+    k = int(0.1 * len(results))
     top_few = results[:k]
     pool_of_words = []
     for result in top_few:
@@ -76,7 +98,6 @@ def expand_query(results, doc_top_terms, inverted_index, meta_data):
 
     new_query = helper.get_top_k(pool_of_words, 10)
     return execute_query([], new_query, [], inverted_index, meta_data)
-
 
 
 def build_tokens(text):
@@ -106,7 +127,16 @@ def execute_query(title_tokens, description_tokens, additional_tokens, inverted_
             for pair in postings_list:
                 doc_id = pair[0]
                 lnc = get_lnc(pair[1], doc_lengths[doc_id])
-                product = lnc*query_ltc[term]
+                
+                # Give a boost to this document if its UPC or IPC is inside
+                # our top list from the high precision set of results
+                boost = 1
+                if has_top_UPC_class(doc_id, meta_data):
+                    boost += 0.15
+                if has_top_IPC_class(doc_id, meta_data):
+                    boost += 0.15
+
+                product = lnc * query_ltc[term] * boost
                 scores.add_product(doc_id, product)
                 if high_priority_term:
                     scores.increment_high_priority_freq(doc_id)
@@ -114,6 +144,22 @@ def execute_query(title_tokens, description_tokens, additional_tokens, inverted_
 
 
     return scores.get_top_results()
+
+
+def has_top_UPC_class(doc_id, meta_data):
+    try:
+        upc = meta_data['UPC_class'][doc_id]
+        return upc in top_UPC_classes
+    except KeyError:
+        return False
+
+def has_top_IPC_class(doc_id, meta_data):
+    try:
+        ipc = meta_data['IPC_class'][doc_id]
+        return ipc in top_IPC_classes
+    except KeyError:
+        return False
+
 
 def is_high_priority_term(term, title_tokens):
     """
