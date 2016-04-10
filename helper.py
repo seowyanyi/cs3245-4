@@ -2,6 +2,8 @@
 import nltk
 from nltk.stem.porter import PorterStemmer
 import re
+from nltk.corpus import wordnet as wn
+from nltk.corpus.reader.wordnet import WordNetError
 
 def remove_stop_words(tokens):
     """
@@ -49,3 +51,36 @@ def case_folder(tokens):
 def normalize_tokens(tokens):
     tokens = stemmer(tokens)
     return case_folder(tokens)
+
+def get_similar_words(word):
+    lemmas_noun = hypernyms_noun = lemmas_verb = hypernyms_verb =[]
+    try:
+        lemmas_noun =  [str(lemma.name()) for lemma in wn.synset(word + '.n.01').lemmas()]    
+    except WordNetError:
+        pass
+
+    try:
+        hypernyms_noun = [str(lemma.name()).split('.')[0] for lemma in wn.synset(word + '.n.01').hypernyms()]    
+    except WordNetError:
+        pass
+
+    if len(lemmas_noun) == 0 and len(hypernyms_noun) == 0:
+        """
+        Only try verbs if there are no similar nouns
+        """
+        try:
+            lemmas_verb =  [str(lemma.name()) for lemma in wn.synset(word + '.v.01').lemmas()]    
+        except WordNetError:
+            pass
+
+        try:
+            hypernyms_verb = [str(lemma.name()).split('.')[0] for lemma in wn.synset(word + '.v.01').hypernyms()]    
+        except WordNetError:
+            pass
+    
+    similar_words = lemmas_noun + hypernyms_noun + lemmas_verb + hypernyms_verb
+    # filter words which are not purely alphabets (there will be words with underscore)
+    # this is because if we want to process such words like "domestic_animal", we have to 
+    # implement 2-grams search which is not done here
+    pattern = re.compile('^[a-zA-Z]+$')
+    return filter(lambda x: pattern.match(x) and x != word, similar_words)
