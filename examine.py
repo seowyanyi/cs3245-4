@@ -13,25 +13,44 @@ def examine(pos, neg):
     with open(neg) as n:
         negative_results = n.read().splitlines()
 
-    print 'True positive: ------------------------------- '
-
+    print '\n\nTrue positive: ------------------------------- '
+    UPC_classes = []
+    IPC_groups = []
     for f in positive_results:
         tree = ET.parse('patsnap-corpus/' + f + '.xml')
         root = tree.getroot()
 
         for child in root:
-            if child.attrib['name'] == 'Title':
-                print child.text.strip()
-    
-    print 'True negative: -------------------------------\n\n'
+            if child.attrib['name'] == 'UPC Class':
+                UPC_classes.append(child.text.strip())
+            elif child.attrib['name'] == 'IPC Subclass':
+                IPC_groups.append(child.text.strip())
+    UPC_classes =  list(set(UPC_classes))    
+    # for i in UPC_classes:
+    #     print i            
+    IPC_groups =  sorted(list(set(IPC_groups)))
+    for i in IPC_groups:
+        print i            
+
+    print '\n\nTrue negative: -------------------------------'
+    UPC_classes = []
+    IPC_groups = []
 
     for f in negative_results:
         tree = ET.parse('patsnap-corpus/' + f + '.xml')
         root = tree.getroot()
 
         for child in root:
-            if child.attrib['name'] == 'Title':
-                print child.text.strip()
+            if child.attrib['name'] == 'UPC Class':
+                UPC_classes.append(child.text.strip())
+            elif child.attrib['name'] == 'IPC Subclass':
+                IPC_groups.append(child.text.strip())
+    UPC_classes =  list(set(UPC_classes))    
+    # for i in UPC_classes:
+    #     print i            
+    IPC_groups =  sorted(list(set(IPC_groups)))
+    for i in IPC_groups:
+        print i            
 
     # true_positive = []
     # for f in positive_results:

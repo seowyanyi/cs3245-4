@@ -20,7 +20,7 @@ def remove_stop_words(tokens):
         'embodiment', 'figs', 'fig', 'further', 'generally', 'herein', 'invention', 'particularly',
         'preferably', 'preferred', 'present', 'provide', 'relatively', 'respectively', 'said',
         'should', 'since', 'some', 'such', 'suitable', 'thereby', 'therefore', 'thereof', 'thereto',
-        'various', 'wherein', 'which'])
+        'various', 'wherein', 'which', 'mechanisms' ,'other'])
     stopwords = normalize_tokens(stopwords)
     return [w for w in tokens if w.lower() not in stopwords]
 
