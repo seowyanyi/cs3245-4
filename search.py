@@ -21,7 +21,8 @@ META_DATA = 'meta_data.txt'
 TOP_X_PERCENT_RESULTS = 0.95
 top_UPC_classes = []
 top_IPC_classes = []
-
+top_family_members = []
+top_cited_by = []
 def search(dictionary_file, postings_file, query_file, output_file):
     try:
         # Remove previous output file
@@ -49,6 +50,7 @@ def search(dictionary_file, postings_file, query_file, output_file):
     additional_tokens = []
     for token in list(set(raw_tokens)):
         additional_tokens.extend(helper.get_similar_words(token))
+        
 
     title_tokens = helper.remove_stop_words(helper.filter_invalid_characters(title_tokens))
     description_tokens = helper.remove_stop_words(helper.filter_invalid_characters(description_tokens))
@@ -57,9 +59,12 @@ def search(dictionary_file, postings_file, query_file, output_file):
     tight_results = execute_query(title_tokens, description_tokens, [], inverted_index, meta_data)
     global top_UPC_classes
     global top_IPC_classes
+    global top_family_members
+    global top_cited_by
     top_UPC_classes = get_top_classes(tight_results, meta_data['UPC_class'], 6)
-    top_IPC_classes = get_top_classes(tight_results, meta_data['IPC_class'], 5)
-
+    top_IPC_classes = get_top_classes(tight_results, meta_data['IPC_class'], 4)
+    top_family_members = get_top_members(tight_results, meta_data['family_members'], 20)
+    top_cited_by = get_top_members(tight_results, meta_data['cited_by'], 20)
     # supplementary_results = expand_query(tight_results, meta_data['doc_top_terms'], inverted_index, meta_data)
 
     additional_tokens = helper.normalize_tokens(list(set(additional_tokens)))
@@ -82,6 +87,16 @@ def get_top_classes(results, classes, x):
             pass
     return helper.get_top_k(PC, x)
 
+def get_top_members(results, classes, x):
+    k = int(0.1 * len(results))
+    top_few = results[:k]
+    members = []
+    for result in top_few:
+        try:
+            members.extend(classes[result])
+        except KeyError:
+            pass
+    return helper.get_top_k(members, x)
 
 def expand_query(results, doc_top_terms, inverted_index, meta_data):
     """
@@ -132,9 +147,13 @@ def execute_query(title_tokens, description_tokens, additional_tokens, inverted_
                 # our top list from the high precision set of results
                 boost = 1
                 if has_top_UPC_class(doc_id, meta_data):
-                    boost += 0.15
+                    boost += 0.4
                 if has_top_IPC_class(doc_id, meta_data):
-                    boost += 0.15
+                    boost += 0.4
+                if has_top_family(doc_id, meta_data):
+                    boost += 0.4
+                if has_top_cited_by(doc_id, meta_data):
+                    boost += 0.4
 
                 product = lnc * query_ltc[term] * boost
                 scores.add_product(doc_id, product)
@@ -145,6 +164,15 @@ def execute_query(title_tokens, description_tokens, additional_tokens, inverted_
 
     return scores.get_top_results()
 
+def has_top_cited_by(doc_id, meta_data):
+    try:
+        members = meta_data['cited_by'][doc_id]
+        for i in range(0, len(members)):
+            if members[i] in top_family_members:
+                return True
+        return False
+    except KeyError:
+        return False
 
 def has_top_UPC_class(doc_id, meta_data):
     try:
@@ -157,6 +185,17 @@ def has_top_IPC_class(doc_id, meta_data):
     try:
         ipc = meta_data['IPC_class'][doc_id]
         return ipc in top_IPC_classes
+    except KeyError:
+        return False
+
+
+def has_top_family(doc_id, meta_data):
+    try:
+        members = meta_data['family_members'][doc_id]
+        for i in range(0, len(members)):
+            if members[i] in top_family_members:
+                return True
+        return False
     except KeyError:
         return False
 

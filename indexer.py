@@ -25,6 +25,8 @@ def build(index_directory, dictionary_file, postings_file):
     doc_lengths = {}
     IPC_class = {}
     UPC_class = {}
+    family_members = {}
+    cited_by = {}
     counter = 0
     doc_top_terms = {}
 
@@ -43,6 +45,18 @@ def build(index_directory, dictionary_file, postings_file):
                 IPC_class[remove_file_ext(file_name)] = child.text.strip()
             elif attr_name == 'UPC Class':
                 UPC_class[remove_file_ext(file_name)] = child.text.strip()
+            elif attr_name == 'Family Members':
+                members = child.text.strip().split('|')
+                m = []
+                for member in members:
+                    m.append(member.strip())                
+                family_members[remove_file_ext(file_name)] = m
+            elif attr_name == 'Cited By':
+                members = child.text.strip().split('|')
+                m = []
+                for member in members:
+                    m.append(member.strip())                
+                cited_by[remove_file_ext(file_name)] = m
 
 
         tokens = helper.remove_stop_words(helper.filter_invalid_characters(tokens))
@@ -59,7 +73,7 @@ def build(index_directory, dictionary_file, postings_file):
     index = sort_inverted_index(index)    
     index = group_index(index)
     write_index_to_disk(index, dictionary_file, postings_file)
-    write_meta_data_to_disk(doc_lengths, len(files_to_index), doc_top_terms, UPC_class, IPC_class)
+    write_meta_data_to_disk(doc_lengths, len(files_to_index), doc_top_terms, UPC_class, IPC_class, family_members, cited_by)
 
 def remove_file_ext(file_name):
     return os.path.splitext(file_name)[0]
@@ -84,14 +98,16 @@ def format_directory_path(directory_path):
         return directory_path + '/'
     return directory_path
 
-def write_meta_data_to_disk(doc_lengths, num_docs, doc_top_terms, UPC_class, IPC_class):
+def write_meta_data_to_disk(doc_lengths, num_docs, doc_top_terms, UPC_class, IPC_class, family_members, cited_by):
     f = open(META_DATA,'w')
     f.write(pickle.dumps({
         'doc_lengths': doc_lengths, 
         'num_docs': num_docs,
         'UPC_class': UPC_class,
         'IPC_class': IPC_class,
-        'doc_top_terms': doc_top_terms
+        'family_members': family_members,
+        'doc_top_terms': doc_top_terms,
+        'cited_by': cited_by
         }))
     f.close()
 
