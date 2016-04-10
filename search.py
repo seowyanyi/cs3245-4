@@ -61,10 +61,16 @@ def search(dictionary_file, postings_file, query_file, output_file):
     global top_IPC_classes
     global top_family_members
     global top_cited_by
+
+    # Get top UPC, IPC, family members and cited by from our true positive proxy results
+    # This helps us determine which documents are more similar to the original top results
+    # when we add in the additional similar words
     top_UPC_classes = get_top_classes(tight_results, meta_data['UPC_class'], 6)
     top_IPC_classes = get_top_classes(tight_results, meta_data['IPC_class'], 4)
     top_family_members = get_top_members(tight_results, meta_data['family_members'], 20)
     top_cited_by = get_top_members(tight_results, meta_data['cited_by'], 20)
+    
+    # query expansion is implemented but does not perform well, hence it is commented out
     # supplementary_results = expand_query(tight_results, meta_data['doc_top_terms'], inverted_index, meta_data)
 
     additional_tokens = helper.normalize_tokens(list(set(additional_tokens)))

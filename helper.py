@@ -72,6 +72,13 @@ def separate_hypens(tokens):
     return t
 
 def get_similar_words(word):
+    """
+    Get similar words using hypernyms, lemmas nouns and verbs. 
+    We don't use hyponyms because it gets too specific and there is a lot of noise
+    We use only nouns and verbs because that seems to be the most distinguishing factor
+    in patents.
+    """
+
     lemmas_noun = hypernyms_noun = lemmas_verb = hypernyms_verb =[]
     try:
         lemmas_noun =  [str(lemma.name()) for lemma in wn.synset(word + '.n.01').lemmas()]    

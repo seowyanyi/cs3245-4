@@ -16,12 +16,17 @@ EVAL
 
 
 ENHANCEMENTS
-- make use of structure. Place more weightage on title of query
 - 2-grams indexing to expand query. 1-gram expansion only if the word is rare.
 - IPCCAT
-- NLTK co-occurrence thesaurus. text1.similar('monster')
-- wordnet w 10 pp63. 
-- positive ones have similar families. But how to identify positive ones in the first place? By scores. Maybe take top 50.
-    o 
 
 - need to cleanly separate tp and fp. Right now there are interspersed
+
+PLACE MORE WEIGHT ON QUERY TITLE. Explain why not doc title later on
+- modify tf-idf
+- need to have at least 4 terms in query title. 
+
+QUERY EXPANSION
+- take top 20% of documents. 
+- for each doc, generate top 10 non stop words
+- pick the top 10 from the pool.
+- run query
