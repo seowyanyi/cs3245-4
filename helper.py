@@ -5,6 +5,14 @@ import re
 from nltk.corpus import wordnet as wn
 from nltk.corpus.reader.wordnet import WordNetError
 
+PATENT_STOPWORDS = ['relevant', 'documents', 'document', 'will', 'describe', 'accordance', 
+    'according', 'another', 'claim', 'comprises', 'corresponding', 'could', 'desired', 
+    'embodiment', 'figs', 'fig', 'further', 'generally', 'herein', 'invention', 'particularly',
+    'preferably', 'preferred', 'present', 'provide', 'relatively', 'respectively', 'said',
+    'should', 'since', 'some', 'such', 'suitable', 'thereby', 'therefore', 'thereof', 'thereto',
+    'various', 'wherein', 'which', 'other', 'using', 'means', 'include', 'technology',
+    'technologies']
+
 def remove_stop_words(tokens):
     """
     Params:
@@ -17,13 +25,16 @@ def remove_stop_words(tokens):
     We remove these along with stop words in the NLTK library. 
     """
     stopwords = nltk.corpus.stopwords.words('english')
-    stopwords.extend(['relevant', 'documents', 'document', 'will', 'describe', 'accordance', 
-        'according', 'another', 'claim', 'comprises', 'corresponding', 'could', 'desired', 
-        'embodiment', 'figs', 'fig', 'further', 'generally', 'herein', 'invention', 'particularly',
-        'preferably', 'preferred', 'present', 'provide', 'relatively', 'respectively', 'said',
-        'should', 'since', 'some', 'such', 'suitable', 'thereby', 'therefore', 'thereof', 'thereto',
-        'various', 'wherein', 'which', 'mechanisms' ,'other'])
+    stopwords.extend(PATENT_STOPWORDS)
     stopwords = normalize_tokens(stopwords)
+    return [w for w in tokens if w.lower() not in stopwords]
+
+def remove_stop_words_without_normalize(tokens):
+    """
+    Same as remove_stop_words, but tokens passed in are not normalized
+    """
+    stopwords = nltk.corpus.stopwords.words('english')
+    stopwords.extend(PATENT_STOPWORDS)
     return [w for w in tokens if w.lower() not in stopwords]
 
 def filter_invalid_characters(tokens):
@@ -49,8 +60,15 @@ def case_folder(tokens):
     return [token.lower() for token in tokens]    
 
 def normalize_tokens(tokens):
+    tokens = separate_hypens(tokens)
     tokens = stemmer(tokens)
     return case_folder(tokens)
+
+def separate_hypens(tokens):
+    t = []
+    for token in tokens:
+        t.extend(token.split('-'))
+    return t
 
 def get_similar_words(word):
     lemmas_noun = hypernyms_noun = lemmas_verb = hypernyms_verb =[]

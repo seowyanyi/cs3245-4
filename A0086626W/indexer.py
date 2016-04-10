@@ -187,12 +187,3 @@ class IndexEntry:
 def add_doc_id_to_tokens(tokens, doc_id):
     return [{'term': token, 'doc_id': doc_id} for token in tokens]
 
-
-def is_valid_token(token):
-    """
-    An invalid token is one that consists entirely of non-alphanumeric characters. 
-    There is no point in searching for purely punctuation.
-    """
-    m = re.search('[a-zA-Z0-9_]+', token)
-    return m is not None
-

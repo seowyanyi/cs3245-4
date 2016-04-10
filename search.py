@@ -18,6 +18,7 @@ pp = pprint.PrettyPrinter(indent=4)
 
 HIGH_PRIORITY_FREQ_THRESHOLD = 3
 META_DATA = 'meta_data.txt'
+TOP_X_PERCENT_RESULTS = 0.6
 
 def search(dictionary_file, postings_file, query_file, output_file):
     try:
@@ -31,16 +32,27 @@ def search(dictionary_file, postings_file, query_file, output_file):
     root = tree.getroot()
     title_tokens = []
     description_tokens = []
+
+    raw_tokens = []
+
     for child in root:
         if child.tag == 'title':
             title_tokens = build_tokens(child.text)
+            raw_tokens.extend(word_tokenize(child.text))
         elif child.tag == 'description':
             description_tokens = build_tokens(child.text)
+            raw_tokens.extend(word_tokenize(child.text))
+
+    raw_tokens = helper.remove_stop_words_without_normalize(helper.filter_invalid_characters(raw_tokens))
+    additional_tokens = []
+    for token in list(set(raw_tokens)):
+        additional_tokens.extend(helper.get_similar_words(token))
 
     title_tokens = helper.remove_stop_words(helper.filter_invalid_characters(title_tokens))
     description_tokens = helper.remove_stop_words(helper.filter_invalid_characters(description_tokens))
+    additional_tokens = helper.normalize_tokens(list(set(additional_tokens)))
 
-    results = execute_query(title_tokens, description_tokens, inverted_index, meta_data)
+    results = execute_query(title_tokens, description_tokens, additional_tokens, inverted_index, meta_data)
     write_to_output(output_file, results)
 
 
@@ -55,15 +67,15 @@ def get_meta_data():
     f.close()
     return meta
 
-def execute_query(title_tokens, description_tokens, inverted_index, meta_data):
-    tokens = title_tokens + description_tokens
+def execute_query(title_tokens, description_tokens, additional_tokens, inverted_index, meta_data):
+    tokens = title_tokens + description_tokens + additional_tokens
     query_ltc = get_ltc(tokens, inverted_index.get_dictionary(), meta_data['num_docs'])
     if not query_ltc:
         return []
 
     doc_lengths = meta_data['doc_lengths']
     scores = Scores()
-    for term in tokens:
+    for term in (tokens):
         high_priority_term = is_high_priority_term(term, title_tokens)
 
         postings_list = inverted_index.get_postings_list(term)
@@ -75,6 +87,8 @@ def execute_query(title_tokens, description_tokens, inverted_index, meta_data):
                 scores.add_product(doc_id, product)
                 if high_priority_term:
                     scores.increment_high_priority_freq(doc_id)
+
+
 
     return scores.get_top_results()
 
@@ -127,8 +141,10 @@ class Scores:
                 score = score * (1 + math.log(self.high_priority_freq[key], 10))
 
             results.append({'doc_id': key, 'score': score})
+
         results = self.sort_results(results)
-        return map(self.get_doc_id, results) # no need to return scores
+        k = int(TOP_X_PERCENT_RESULTS * len(results))
+        return map(self.get_doc_id, results)[:k] # no need to return scores
 
 
 def get_lnc(term_freq, doc_length):

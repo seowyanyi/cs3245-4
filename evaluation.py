@@ -19,43 +19,25 @@ def evaluate(result_file, positive, negative):
     with open(negative) as n:
         negative_docs = n.read().splitlines()
     
-    # testing
-    top_UPC_classes = []
-    top_IPC_groups = []
-    for i in range(0, 100):
-        result = results[i]
-        tree = ET.parse('patsnap-corpus/' + result + '.xml')
-        root = tree.getroot()
-
-        for child in root:
-            if child.attrib['name'] == 'UPC Class':
-                top_UPC_classes.append(child.text.strip())
-            elif child.attrib['name'] == 'IPC Group':
-                top_IPC_groups.append(child.text.strip())
-
-    print get_top_k(top_UPC_classes, 15)
-    print get_top_k(top_IPC_groups, 15)
-
-
-
-    return
     tp = fp = fn = 0
 
     for i in range(0, len(results)):
         result = results[i]
         if result in positive_docs:
             tp += 1
-            print 'True positive {} \t{}/{}'.format(result, i+1, len(results))
-
-    for doc in positive_docs:
-        if doc not in results:
-            fn += 1
+            # print 'True positive {} \t{}/{}'.format(result, i+1, len(results))
 
     for i in range(0, len(results)):
         result = results[i]
         if result in negative_docs:
             fp += 1
-            print 'False positive {} \t{}/{}'.format(result, i+1, len(results))
+            # print 'False positive {} \t{}/{}'.format(result, i+1, len(results))
+
+    for doc in positive_docs:
+        if doc not in results:
+            fn += 1
+            print 'False negative {}'.format(doc)
+            
 
     if tp == 0 and fp == 0:
         P = 0
@@ -110,3 +92,25 @@ if __name__ == '__main__':
         sys.exit(2)
 
     evaluate(result_file, positive, negative)
+
+
+        # testing
+    # top_UPC_classes = []
+    # top_IPC_groups = []
+    # for i in range(0, 100):
+    #     result = results[i]
+    #     tree = ET.parse('patsnap-corpus/' + result + '.xml')
+    #     root = tree.getroot()
+
+    #     for child in root:
+    #         if child.attrib['name'] == 'UPC Class':
+    #             top_UPC_classes.append(child.text.strip())
+    #         elif child.attrib['name'] == 'IPC Group':
+    #             top_IPC_groups.append(child.text.strip())
+
+    # print get_top_k(top_UPC_classes, 15)
+    # print get_top_k(top_IPC_groups, 15)
+
+
+
+    # return
