@@ -19,18 +19,22 @@ def evaluate(result_file, positive, negative):
     
     tp = fp = fn = 0
 
-    for result in results:
+    for i in range(0, len(results)):
+        result = results[i]
         if result in positive_docs:
             tp += 1
+            print 'True positive {}/{}'.format(i+1, len(results))
 
     for doc in positive_docs:
         if doc not in results:
             fn += 1
 
-    for result in results:
+    for i in range(0, len(results)):
+        result = results[i]
         if result in negative_docs:
             fp += 1
-    
+            print 'False positive {}/{}'.format(i+1, len(results))
+
     if tp == 0 and fp == 0:
         P = 0
     else:      

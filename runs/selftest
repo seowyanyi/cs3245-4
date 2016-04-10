@@ -38,6 +38,12 @@ Precision: 0.5
 Recall: 1.0
 F2: 0.5
 
+*****************************
+Run 2 after stopwords filtering:
+Decrease in recall. Slight increase in accuracy,
+except for one case where we had a large drop.
+*****************************
+
 
 A
 >>> Query 1

@@ -1,0 +1,11 @@
+python index.py -i patsnap-corpus -d dictionary-file -p postings-file
+
+python search.py -d dictionary-file -p postings-file -q cs3245-hw4/q1.xml -o output-file-of-results
+python evaluation.py -r output-file-of-results -p cs3245-hw4/q1-qrels+ve.txt  -n cs3245-hw4/q1-qrels-ve.txt
+
+python search.py -d dictionary-file -p postings-file -q cs3245-hw4/q2.xml -o output-file-of-results
+python evaluation.py -r output-file-of-results -p cs3245-hw4/q2-qrels+ve.txt  -n cs3245-hw4/q2-qrels-ve.txt
+
+
+python examine.py -i cs3245-hw4/q1-qrels+ve.txt
+

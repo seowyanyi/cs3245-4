@@ -1,0 +1,27 @@
+QUERY
+- query has two parts. title and description.
+- title: general description
+- description: more in depth. But there are some irrelevant words which always appear, like "relevant documents will describe". Thus word rarity is very important. idf.
+- Thus need to filter out all the junk. 
+
+DOC
+- important fields: title, abstract, 
+- unknown: Kind Code? Family Members (similar docs), IPC class, group etc., UPC
+- vague words to enlarge scope of patent
+- kind code: not important in determining relevance. Can mean first pub/second pub,  kind of patent doc (utility? Design?) 
+
+EVAL
+- precision = relevant_ret / (relevant_ret + not relevant_ret)
+- recall = relevant_ret / total relevant
+
+
+ENHANCEMENTS
+- make use of structure. Place more weightage on title of query
+- 2-grams indexing to expand query. 1-gram expansion only if the word is rare.
+- IPCCAT
+- NLTK co-occurrence thesaurus. text1.similar('monster')
+- wordnet w 10 pp63. 
+- positive ones have similar families. But how to identify positive ones in the first place? By scores. Maybe take top 50.
+    o 
+
+- need to cleanly separate tp and fp. Right now there are interspersed

@@ -16,7 +16,6 @@ import xml.etree.ElementTree as ET
 
 pp = pprint.PrettyPrinter(indent=4)
 
-HIGH_PRIORITY_FREQ_THRESHOLD = 3
 META_DATA = 'meta_data.txt'
 
 def search(dictionary_file, postings_file, query_file, output_file):
@@ -29,18 +28,17 @@ def search(dictionary_file, postings_file, query_file, output_file):
     meta_data = get_meta_data()
     tree = ET.parse(query_file)
     root = tree.getroot()
-    title_tokens = []
-    description_tokens = []
+    tokens = []
     for child in root:
         if child.tag == 'title':
-            title_tokens = build_tokens(child.text)
+            t = build_tokens(child.text)
+            tokens.extend(t)
         elif child.tag == 'description':
-            description_tokens = build_tokens(child.text)
+            t = build_tokens(child.text)
+            tokens.extend(t)
 
-    title_tokens = helper.remove_stop_words(helper.filter_invalid_characters(title_tokens))
-    description_tokens = helper.remove_stop_words(helper.filter_invalid_characters(description_tokens))
-
-    results = execute_query(title_tokens, description_tokens, inverted_index, meta_data)
+    tokens = helper.remove_stop_words(helper.filter_invalid_characters(tokens))
+    results = execute_query(tokens, inverted_index, meta_data)
     write_to_output(output_file, results)
 
 
@@ -55,8 +53,7 @@ def get_meta_data():
     f.close()
     return meta
 
-def execute_query(title_tokens, description_tokens, inverted_index, meta_data):
-    tokens = title_tokens + description_tokens
+def execute_query(tokens, inverted_index, meta_data):
     query_ltc = get_ltc(tokens, inverted_index.get_dictionary(), meta_data['num_docs'])
     if not query_ltc:
         return []
@@ -64,8 +61,6 @@ def execute_query(title_tokens, description_tokens, inverted_index, meta_data):
     doc_lengths = meta_data['doc_lengths']
     scores = Scores()
     for term in tokens:
-        high_priority_term = is_high_priority_term(term, title_tokens)
-
         postings_list = inverted_index.get_postings_list(term)
         if postings_list:
             for pair in postings_list:
@@ -73,33 +68,17 @@ def execute_query(title_tokens, description_tokens, inverted_index, meta_data):
                 lnc = get_lnc(pair[1], doc_lengths[doc_id])
                 product = lnc*query_ltc[term]
                 scores.add_product(doc_id, product)
-                if high_priority_term:
-                    scores.increment_high_priority_freq(doc_id)
 
     return scores.get_top_results()
-
-def is_high_priority_term(term, title_tokens):
-    """
-    A high priority term is one that appears in the query title. This is based on
-    the heuristic that a term in the title is usually more important than an 
-    arbitrary term in the description.
-    """
-    return term in title_tokens
 
 class Scores:
     def __init__(self):
         self.scores = {}
-        self.high_priority_freq = {}
 
     def add_product(self, doc_id, product):
         if doc_id not in self.scores:
             self.scores[doc_id] = 0
-        if doc_id not in self.high_priority_freq:
-            self.high_priority_freq[doc_id] = 0            
         self.scores[doc_id] += product
-
-    def increment_high_priority_freq(self, doc_id):
-        self.high_priority_freq[doc_id] += 1
 
     def get_score(self, doc_id):
         if doc_id not in self.scores:
@@ -114,19 +93,13 @@ class Scores:
 
     def get_top_results(self):
         """
-        Returns the doc ids ordered by relevance
+        Returns the top k doc ids ordered by relevance
+        For those docs with the same relevance, we further sort them by
+        increasing docIds
         """
         results = []
         for key in self.scores:
-            score = self.scores[key]
-            if self.high_priority_freq[key] >= HIGH_PRIORITY_FREQ_THRESHOLD:
-                """
-                High priority frequency threshold is crucial in filtering out
-                false positives
-                """
-                score = score * (1 + math.log(self.high_priority_freq[key], 10))
-
-            results.append({'doc_id': key, 'score': score})
+            results.append({'doc_id': key, 'score': self.scores[key]})
         results = self.sort_results(results)
         return map(self.get_doc_id, results) # no need to return scores
 
