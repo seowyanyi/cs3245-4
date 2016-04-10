@@ -23,7 +23,11 @@ def build(index_directory, dictionary_file, postings_file):
     files_to_index = [f for f in listdir(index_directory) if isfile(join(index_directory, f))]
     index = []
     doc_lengths = {}
+    IPC_class = {}
+    UPC_class = {}
     counter = 0
+    doc_top_terms = {}
+
     for file_name in files_to_index:
         file_path = format_directory_path(index_directory) + file_name
         # Read XML
@@ -31,26 +35,31 @@ def build(index_directory, dictionary_file, postings_file):
         root = tree.getroot()
         tokens = []
         for child in root:
-            if child.attrib['name'] == 'Title':
+            attr_name = child.attrib['name']
+            if attr_name == 'Title' or attr_name == 'Abstract':
                 t = build_tokens(child.text)
                 tokens.extend(t)
-            elif child.attrib['name'] == 'Abstract':
-                t = build_tokens(child.text)
-                tokens.extend(t)
-        
+            elif attr_name == 'IPC Class':
+                IPC_class[remove_file_ext(file_name)] = child.text.strip()
+            elif attr_name == 'UPC Class':
+                UPC_class[remove_file_ext(file_name)] = child.text.strip()
+
+
         tokens = helper.remove_stop_words(helper.filter_invalid_characters(tokens))
+        doc_top_terms[remove_file_ext(file_name)] = helper.get_top_k(tokens, 10)
+
         # build tokens
         doc_lengths[remove_file_ext(file_name)] = get_doc_length(tokens)
         index_entries = add_doc_id_to_tokens(tokens, remove_file_ext(file_name))
         index.extend(index_entries)
-    #     counter += 1
-    #     if counter % 500 == 0:
-    #         print 'indexing ............... {}% completed'.format(round(float(counter)/len(files_to_index)*100, 2))
-    # print 'Writing index to disk...'
-    index = sort_index(index)    
+        counter += 1
+        if counter % 300 == 0:
+            print 'indexing ............... {}% completed'.format(round(float(counter)/len(files_to_index)*100, 2))
+    print 'Writing index to disk...'
+    index = sort_inverted_index(index)    
     index = group_index(index)
     write_index_to_disk(index, dictionary_file, postings_file)
-    write_meta_data_to_disk(doc_lengths, len(files_to_index))
+    write_meta_data_to_disk(doc_lengths, len(files_to_index), doc_top_terms, UPC_class, IPC_class)
 
 def remove_file_ext(file_name):
     return os.path.splitext(file_name)[0]
@@ -75,9 +84,15 @@ def format_directory_path(directory_path):
         return directory_path + '/'
     return directory_path
 
-def write_meta_data_to_disk(doc_lengths, num_docs):
+def write_meta_data_to_disk(doc_lengths, num_docs, doc_top_terms, UPC_class, IPC_class):
     f = open(META_DATA,'w')
-    f.write(pickle.dumps({'doc_lengths': doc_lengths, 'num_docs': num_docs}))
+    f.write(pickle.dumps({
+        'doc_lengths': doc_lengths, 
+        'num_docs': num_docs,
+        'UPC_class': UPC_class,
+        'IPC_class': IPC_class,
+        'doc_top_terms': doc_top_terms
+        }))
     f.close()
 
 
@@ -125,8 +140,11 @@ def inverted_index_to_string(ii):
         s += '{:<10}   {:>5}\t --> {:<10}\n'.format(elem.get_term(), elem.get_frequency(), elem.get_postings_list())
     return s
 
-def sort_index(index):
+def sort_inverted_index(index):
     return sorted(index, key = lambda entry: (entry['term'], entry['doc_id']))
+
+def sort_index(index):
+    return sorted(index, key = lambda entry: (entry['doc_id'], entry['term']))
 
 def group_index(index):
     """

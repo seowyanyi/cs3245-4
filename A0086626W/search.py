@@ -16,9 +16,9 @@ import xml.etree.ElementTree as ET
 
 pp = pprint.PrettyPrinter(indent=4)
 
-HIGH_PRIORITY_FREQ_THRESHOLD = 3
+HIGH_PRIORITY_FREQ_THRESHOLD = 4
 META_DATA = 'meta_data.txt'
-TOP_X_PERCENT_RESULTS = 0.6
+TOP_X_PERCENT_RESULTS = 0.9
 
 def search(dictionary_file, postings_file, query_file, output_file):
     try:
@@ -53,7 +53,30 @@ def search(dictionary_file, postings_file, query_file, output_file):
     additional_tokens = helper.normalize_tokens(list(set(additional_tokens)))
 
     results = execute_query(title_tokens, description_tokens, additional_tokens, inverted_index, meta_data)
+
+    supplementary_results = expand_query(results, meta_data['doc_top_terms'], inverted_index, meta_data)
+    k = int(TOP_X_PERCENT_RESULTS * len(results))
+    j = int(TOP_X_PERCENT_RESULTS * len(supplementary_results))
+    results = list(set(results[:k] + supplementary_results[:j]))
     write_to_output(output_file, results)
+
+
+def expand_query(results, doc_top_terms, inverted_index, meta_data):
+    """
+    To deal with the anomalous state of knowledge problem
+    We take top 20% of documents. For each document, pick the 10 most frequent words (already indexed)
+    From this pool of words, pick the final top 10 by frequency.
+    Run query again and return results
+    """
+    k = int(0.2 * len(results))
+    top_few = results[:k]
+    pool_of_words = []
+    for result in top_few:
+        pool_of_words.extend(doc_top_terms[result])
+
+    new_query = helper.get_top_k(pool_of_words, 10)
+    return execute_query([], new_query, [], inverted_index, meta_data)
+
 
 
 def build_tokens(text):
@@ -143,8 +166,7 @@ class Scores:
             results.append({'doc_id': key, 'score': score})
 
         results = self.sort_results(results)
-        k = int(TOP_X_PERCENT_RESULTS * len(results))
-        return map(self.get_doc_id, results)[:k] # no need to return scores
+        return map(self.get_doc_id, results) # no need to return scores
 
 
 def get_lnc(term_freq, doc_length):

@@ -4,6 +4,7 @@ from nltk.stem.porter import PorterStemmer
 import re
 from nltk.corpus import wordnet as wn
 from nltk.corpus.reader.wordnet import WordNetError
+from collections import Counter
 
 PATENT_STOPWORDS = ['relevant', 'documents', 'document', 'will', 'describe', 'accordance', 
     'according', 'another', 'claim', 'comprises', 'corresponding', 'could', 'desired', 
@@ -102,3 +103,14 @@ def get_similar_words(word):
     # implement 2-grams search which is not done here
     pattern = re.compile('^[a-zA-Z]+$')
     return filter(lambda x: pattern.match(x) and x != word, similar_words)
+
+def get_top_k(items, k):
+    """
+    Returns the top k most frequent occurences in items
+    """
+    counts = Counter(items)
+    top_k = counts.most_common(k)
+    return map(first_elem, top_k)
+
+def first_elem(x):
+    return x[0]

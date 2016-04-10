@@ -25,9 +25,12 @@ def examine(pos, neg):
                 UPC_classes.append(child.text.strip())
             elif child.attrib['name'] == 'IPC Subclass':
                 IPC_groups.append(child.text.strip())
+            elif child.attrib['name'] == 'Title':
+                pass
+                # print child.text.strip()
     UPC_classes =  list(set(UPC_classes))    
-    # for i in UPC_classes:
-    #     print i            
+    for i in UPC_classes:
+        print i            
     IPC_groups =  sorted(list(set(IPC_groups)))
     for i in IPC_groups:
         print i            
@@ -45,9 +48,13 @@ def examine(pos, neg):
                 UPC_classes.append(child.text.strip())
             elif child.attrib['name'] == 'IPC Subclass':
                 IPC_groups.append(child.text.strip())
+            elif child.attrib['name'] == 'Title':
+                pass
+                # print child.text.strip()
+
     UPC_classes =  list(set(UPC_classes))    
-    # for i in UPC_classes:
-    #     print i            
+    for i in UPC_classes:
+        print i            
     IPC_groups =  sorted(list(set(IPC_groups)))
     for i in IPC_groups:
         print i            

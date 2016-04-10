@@ -25,13 +25,13 @@ def evaluate(result_file, positive, negative):
         result = results[i]
         if result in positive_docs:
             tp += 1
-            # print 'True positive {} \t{}/{}'.format(result, i+1, len(results))
+            print 'True positive {} \t{}/{}'.format(result, i+1, len(results))
 
     for i in range(0, len(results)):
         result = results[i]
         if result in negative_docs:
             fp += 1
-            # print 'False positive {} \t{}/{}'.format(result, i+1, len(results))
+            print 'False positive {} \t{}/{}'.format(result, i+1, len(results))
 
     for doc in positive_docs:
         if doc not in results:

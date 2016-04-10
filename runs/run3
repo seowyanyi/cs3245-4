@@ -1,0 +1,42 @@
+# result.1.txt content: 
+Average F: 0.540727091704579
+Average Precision: 0.5163284909348
+Average Recall: 0.619189215977796
+Count: 453
+Correct: 49
+Points Judged: 177
+# END result.1.txt content: 
+# result.2.txt content: 
+Average F: 0.510244999119561
+Average Precision: 0.604843710946952
+Average Recall: 0.532198463676657
+Count: 1000
+Correct: 379
+Points Judged: 928
+# END result.2.txt content: 
+# result.3.txt content: 
+Average F: 0.403297265964319
+Average Precision: 0.245005431331999
+Average Recall: 0.561477080785136
+Count: 469
+Correct: 59
+Points Judged: 291
+# END result.3.txt content: 
+# result.4.txt content: 
+Average F: 0.151555525865537
+Average Precision: 0.107159641493434
+Average Recall: 0.180152197546203
+Count: 804
+Correct: 16
+Points Judged: 137
+# END result.4.txt content: 
+# result.5.txt content: 
+Average F: 0
+Average Precision: 0
+Average Recall: 0
+Count: 867
+Correct: 0
+Points Judged: 0
+# END result.5.txt content: 
+
+Avg: 0.4
