@@ -11,8 +11,7 @@ PATENT_STOPWORDS = ['relevant', 'documents', 'document', 'will', 'describe', 'ac
     'embodiment', 'figs', 'fig', 'further', 'generally', 'herein', 'invention', 'particularly',
     'preferably', 'preferred', 'present', 'provide', 'relatively', 'respectively', 'said',
     'should', 'since', 'some', 'such', 'suitable', 'thereby', 'therefore', 'thereof', 'thereto',
-    'various', 'wherein', 'which', 'other', 'using', 'means', 'include', 'technology',
-    'technologies']
+    'various', 'wherein', 'which', 'other', 'using', 'means', 'include']
 
 def remove_stop_words(tokens):
     """

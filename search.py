@@ -14,6 +14,7 @@ except:
 import pprint
 import xml.etree.ElementTree as ET
 
+
 pp = pprint.PrettyPrinter(indent=4)
 
 HIGH_PRIORITY_FREQ_THRESHOLD = 4
@@ -31,6 +32,7 @@ def search(dictionary_file, postings_file, query_file, output_file):
         pass
     inverted_index = InvertedIndex(dictionary_file, postings_file)
     meta_data = get_meta_data()
+
     tree = ET.parse(query_file)
     root = tree.getroot()
     title_tokens = []
@@ -70,9 +72,10 @@ def search(dictionary_file, postings_file, query_file, output_file):
     top_family_members = get_top_members(tight_results, meta_data['family_members'], 20)
     top_cited_by = get_top_members(tight_results, meta_data['cited_by'], 20)
     
-    # query expansion is implemented but does not perform well, hence it is commented out
+    # query expansion 
     # supplementary_results = expand_query(tight_results, meta_data['doc_top_terms'], inverted_index, meta_data)
-
+    
+    # synonyms, hypernyms
     additional_tokens = helper.normalize_tokens(list(set(additional_tokens)))
 
     results = execute_query(title_tokens, description_tokens, additional_tokens, inverted_index, meta_data)
@@ -83,7 +86,7 @@ def search(dictionary_file, postings_file, query_file, output_file):
     write_to_output(output_file, results[:k])
 
 def get_top_classes(results, classes, x):
-    k = int(0.1 * len(results))
+    k = int(0.05 * len(results))
     top_few = results[:k]
     PC = []
     for result in top_few:
@@ -94,7 +97,7 @@ def get_top_classes(results, classes, x):
     return helper.get_top_k(PC, x)
 
 def get_top_members(results, classes, x):
-    k = int(0.1 * len(results))
+    k = int(0.05 * len(results))
     top_few = results[:k]
     members = []
     for result in top_few:
@@ -107,17 +110,17 @@ def get_top_members(results, classes, x):
 def expand_query(results, doc_top_terms, inverted_index, meta_data):
     """
     To deal with the anomalous state of knowledge problem
-    We take top 10% of documents. For each document, pick the 10 most frequent words (already indexed)
-    From this pool of words, pick the final top 10 by frequency.
+    We take top 5% of documents. For each document, pick the 10 most frequent non-stop words (already indexed)
+    From this pool of words, pick the final top few by frequency.
     Run query again and return results
     """
-    k = int(0.1 * len(results))
+    k = int(0.05 * len(results))
     top_few = results[:k]
     pool_of_words = []
     for result in top_few:
         pool_of_words.extend(doc_top_terms[result])
 
-    new_query = helper.get_top_k(pool_of_words, 10)
+    new_query = helper.get_top_k(pool_of_words, 4)
     return execute_query([], new_query, [], inverted_index, meta_data)
 
 
@@ -338,3 +341,4 @@ if __name__ == '__main__':
         sys.exit(2)
 
     search(dictionary_file, postings_file, query_file, output_file)
+

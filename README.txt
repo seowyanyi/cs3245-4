@@ -1,4 +1,4 @@
-This is the README file for A0086626W's submission
+This is the README file for A0086626W's submission:)
 
 Email: a0086626@u.nus.edu
 == General Notes about this assignment ==
@@ -10,7 +10,7 @@ sufficient.
 The general strategy is to use a enhanced version of tf-idf. 
 
 Enhancements: 
- - Query expansion. Take top 10% of documents and use their most frequent words to execute another query  (commented out due to poor performance), 
+ - Query expansion. Take top 5% of documents and use their most frequent words non-stop to execute another query  (commented out due to poor performance), 
 - Adding similar terms. hypernyms, synonyms of nouns and verbs.
 - Filtering of invalid characters like punctuation and numbers. I only whitelisted alphabets and '-', rationale being only words and not numbers are descriptive of what a patent is about. This reduces the noise in the data. 
 - Removal of patent-specific stopwords, on top of nltk stopwords
